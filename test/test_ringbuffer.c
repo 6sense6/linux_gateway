@@ -18,6 +18,7 @@ void *producer(void *arg)
         c++;
         if (c > 'Z') c = 'A';
     }
+    printf("\n[生产者] 退出，共写入 %d\n", prod_count);
 
     printf("\n[生产者] 线程退出\n");
     pthread_exit(NULL);
@@ -34,16 +35,19 @@ void *consumer(void *arg)
         int ret = ringbuffer_read(rb, &c);
         if (ret != 0) break;
 
+	cons_count++;
+	usleep(50 * 1000);
+
         if (c != expected_next) {
             err_count++;
         }
         expected_next++;
         if (expected_next > 'Z') expected_next = 'A';
-        cons_count++;
         
         printf("%c ", c);
         fflush(stdout);
     }
+    printf("\n[消费者] 退出，共读取 %d\n", cons_count);
 
     printf("\n[消费者] 线程退出\n");
     pthread_exit(NULL);

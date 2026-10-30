@@ -55,8 +55,8 @@ void ringbuffer_stop(ringbuffer_t *rb)
     pthread_mutex_unlock(&rb->mutex);
 }
 
-// 写入一个字符，满则阻塞等待
-int ringbuffer_write(ringbuffer_t *rb, char data)
+// 写入一个字节，满则阻塞等待
+int ringbuffer_write(ringbuffer_t *rb, uint8_t data)
 {
     if (!rb) return -1;
 
@@ -81,8 +81,8 @@ int ringbuffer_write(ringbuffer_t *rb, char data)
     return 0;
 }
 
-// 读取一个字符，空则阻塞等待
-int ringbuffer_read(ringbuffer_t *rb, char *data)
+// 读取一个字节，空则阻塞等待
+int ringbuffer_read(ringbuffer_t *rb, uint8_t *data)
 {
     if (!rb || !data) return -1;
 

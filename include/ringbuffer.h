@@ -2,10 +2,11 @@
 #define RINGBUFFER_H
 
 #include <pthread.h>
+#include <stdint.h>
 
 // 环形缓冲区结构体
 typedef struct {
-    char *buf;                // 数据存储区
+    uint8_t *buf;             // 数据存储区
     int size;                 // 总容量
     int r_idx;                // 读索引
     int w_idx;                // 写索引
@@ -18,7 +19,7 @@ typedef struct {
 int  ringbuffer_init(ringbuffer_t *rb, int size);
 void ringbuffer_destroy(ringbuffer_t *rb);
 void ringbuffer_stop(ringbuffer_t *rb);
-int  ringbuffer_write(ringbuffer_t *rb, char data);
-int  ringbuffer_read(ringbuffer_t *rb, char *data);
+int  ringbuffer_write(ringbuffer_t *rb, uint8_t data);
+int  ringbuffer_read(ringbuffer_t *rb, uint8_t *data);
 
 #endif

@@ -8,9 +8,10 @@ GATEWAY_OBJS = $(BUILD)/main.o $(BUILD)/ringbuffer.o $(BUILD)/logger.o $(BUILD)/
 # 每个测试程序 = 测试自己的 .o + 它依赖的模块 .o
 TEST_RINGBUFFER_OBJS = $(BUILD)/test_ringbuffer.o $(BUILD)/ringbuffer.o
 TEST_LOGGER_OBJS     = $(BUILD)/test_logger.o     $(BUILD)/logger.o
-TEST_SERIAL_OBJS     = $(BUILD)/test_serial.o 	  $(BUILD)/serial.o 		$(BUILD)/logger.o
+TEST_SERIAL_OBJS     = $(BUILD)/test_serial.o 	  $(BUILD)/serial.o 	$(BUILD)/logger.o
+TEST_FRAME_OBJS      = $(BUILD)/test_frame.o      $(BUILD)/frame.o      $(BUILD)/logger.o
 
-ALL_TESTS = $(BUILD)/test_ringbuffer $(BUILD)/test_logger $(BUILD)/test_serial
+ALL_TESTS = $(BUILD)/test_ringbuffer $(BUILD)/test_logger $(BUILD)/test_serial $(BUILD)/test_frame
 
 all: $(BUILD)/gateway $(ALL_TESTS)
 
@@ -33,6 +34,9 @@ $(BUILD)/%.o: src/%.c | $(BUILD)
 # test/ 下的 .c → build/ 下的同名 .o（测试）
 $(BUILD)/%.o: test/%.c | $(BUILD)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/test_frame: $(TEST_FRAME_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
 $(BUILD):
 	mkdir -p $@

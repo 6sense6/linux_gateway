@@ -3,7 +3,7 @@ CFLAGS  = -Wall -g -Iinclude -pthread -MMD -MP
 BUILD   = build
 
 # gateway 主程序：main + 它用到的所有模块
-GATEWAY_OBJS = $(BUILD)/main.o $(BUILD)/ringbuffer.o $(BUILD)/logger.o $(BUILD)/serial.o
+GATEWAY_OBJS = $(BUILD)/main.o $(BUILD)/ringbuffer.o $(BUILD)/logger.o $(BUILD)/serial.o $(BUILD)/frame.o
 
 # 每个测试程序 = 测试自己的 .o + 它依赖的模块 .o
 TEST_RINGBUFFER_OBJS = $(BUILD)/test_ringbuffer.o $(BUILD)/ringbuffer.o

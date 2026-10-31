@@ -28,9 +28,22 @@ int ringbuffer_init(ringbuffer_t *rb, int size)
     rb->w_idx = 0;
     rb->abort = 0;
 
-    pthread_mutex_init(&rb->mutex, NULL);
-    pthread_cond_init(&rb->not_empty, NULL);
-    pthread_cond_init(&rb->not_full, NULL);
+    /* pthread_* 返回值必须查, 任一失败都要把已建好的资源逐层释放 */
+    if (pthread_mutex_init(&rb->mutex, NULL) != 0) {
+        free(rb->buf);
+        return -1;
+    }
+    if (pthread_cond_init(&rb->not_empty, NULL) != 0) {
+        pthread_mutex_destroy(&rb->mutex);
+        free(rb->buf);
+        return -1;
+    }
+    if (pthread_cond_init(&rb->not_full, NULL) != 0) {
+        pthread_cond_destroy(&rb->not_empty);
+        pthread_mutex_destroy(&rb->mutex);
+        free(rb->buf);
+        return -1;
+    }
     return 0;
 }
 

@@ -8,8 +8,8 @@
 
 #define LOG_BUF_SIZE 512
 
-/* 日志输出目标，默认 2 号描述符即 stderr（笔记 1.9 节） */
-static int g_log_fd = 2;
+/* 日志输出目标，默认 STDERR_FILENO 即 stderr（笔记 1.9 节） */
+static int g_log_fd = STDERR_FILENO;
 static log_level_t g_min_level = LOG_LVL_DEBUG;
 static pthread_mutex_t g_log_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -30,7 +30,7 @@ int logger_init(const char *filepath, log_level_t min_level)
         }
         g_log_fd = fd;
     } else {
-        g_log_fd = 2;  /* stderr */
+        g_log_fd = STDERR_FILENO;  /* stderr */
     }
 
     g_min_level = min_level;
@@ -42,7 +42,7 @@ void logger_close(void)
     /* 0/1/2 是进程自带的，只有自己 open 出来的（>=3）才需要关 */
     if (g_log_fd >= 3)
         close(g_log_fd);
-    g_log_fd = 2;
+    g_log_fd = STDERR_FILENO;
 }
 
 void logger_log(log_level_t level, const char *file, int line,
@@ -60,6 +60,10 @@ void logger_log(log_level_t level, const char *file, int line,
     /* 级别不够直接返回，连时间都不取，零成本丢弃 */
     if (level < g_min_level)
         return;
+
+    /* 上界防御：level 越界会让 g_level_str 数组越界读 */
+    if (level > LOG_LVL_ERROR)
+        level = LOG_LVL_ERROR;
 
     /* 第一段：时间戳 */
     time(&now);

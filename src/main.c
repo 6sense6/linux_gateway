@@ -37,6 +37,11 @@ int main(void)
         }
         for (i = 0; i < n; i++) {
             if (frame_parse_byte(&parser, buf[i], &f) == 1) {
+                /* 温湿度帧约定 payload 固定 4 字节, 非 4 字节按未知帧跳过, 不硬取 */
+                if (f.len != 4) {
+                    LOG_WARN("gateway: frame len=%d != 4, skip", f.len);
+                    continue;
+                }
                 int16_t temp = (int16_t)((f.payload[0] << 8) | f.payload[1]);
                 int16_t humi = (int16_t)((f.payload[2] << 8) | f.payload[3]);
                 total++;

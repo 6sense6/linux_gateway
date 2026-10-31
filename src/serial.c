@@ -101,6 +101,10 @@ int serial_write(int fd, const void *buf, int len)
             LOG_ERROR("write fd=%d failed: %s", fd, strerror(errno));
             return -1;
         }
+        if (n == 0) { /* 写了0字节不前进, 防死循环 */
+            LOG_ERROR("write fd=%d wrote 0 bytes", fd);
+            return -1;
+        }
         written += n;
     }
     return written;

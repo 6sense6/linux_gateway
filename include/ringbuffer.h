@@ -19,6 +19,7 @@ typedef struct {
 int  ringbuffer_init(ringbuffer_t *rb, int size);
 void ringbuffer_destroy(ringbuffer_t *rb);
 void ringbuffer_stop(ringbuffer_t *rb);
+int  ringbuffer_is_stopped(ringbuffer_t *rb);
 int  ringbuffer_write(ringbuffer_t *rb, uint8_t data);
 int  ringbuffer_read(ringbuffer_t *rb, uint8_t *data);
 

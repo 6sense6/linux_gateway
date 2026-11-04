@@ -68,6 +68,18 @@ void ringbuffer_stop(ringbuffer_t *rb)
     pthread_mutex_unlock(&rb->mutex);
 }
 
+/* 查询是否已 stop，供 caller 在非阻塞路径上检查退出条件 */
+int ringbuffer_is_stopped(ringbuffer_t *rb)
+{
+    int stopped;
+    if (!rb) return 1;
+    pthread_mutex_lock(&rb->mutex);
+    stopped = rb->abort;
+    pthread_mutex_unlock(&rb->mutex);
+    return stopped;
+}
+
+
 // 写入一个字节，满则阻塞等待
 int ringbuffer_write(ringbuffer_t *rb, uint8_t data)
 {

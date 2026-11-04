@@ -22,6 +22,7 @@
 typedef struct {
     int          serial_fd;
     int          sock_fd;
+    int          exit_code;   /* 线程运行时故障置1，main据此返回非0 */
     ringbuffer_t rb_uart;   /* 原始字节流：串口 → 解析 */
     ringbuffer_t rb_json;   /* JSON 行(带\n)：解析 → 上传 */
 } gateway_ctx_t;
@@ -37,14 +38,20 @@ static void *collect_thread(void *arg)
         n = serial_read(ctx->serial_fd, buf, sizeof(buf));
         if (n < 0) {
             LOG_ERROR("collect: serial broken, shutdown pipeline");
+            ctx->exit_code = 1;
             ringbuffer_stop(&ctx->rb_uart);
             ringbuffer_stop(&ctx->rb_json);
             break;
         }
-        if (n == 0) {                       /* VTIME 200ms 超时心跳，不是错误 */
+        if (n == 0) {
+            if (ringbuffer_is_stopped(&ctx->rb_uart)) {
+                LOG_INFO("collect: rb_uart stopped, exit");
+                return NULL;
+            }
             LOG_DEBUG("collect: no data (timeout)");
             continue;
         }
+
         for (int i = 0; i < n; i++) {
             if (ringbuffer_write(&ctx->rb_uart, buf[i]) != 0) {
                 LOG_INFO("collect: rb_uart stopped, exit");
@@ -129,9 +136,17 @@ static void *upload_thread(void *arg)
         if (b == '\n') {
             int n = tcp_client_send(ctx->sock_fd, line, idx);
             if (n < 0) {
-                /* 具体原因 tcp_client_send 已打 ERROR，这里只记丢帧 */
-                LOG_ERROR("upload: send failed, frame dropped");
+                LOG_ERROR("upload: send failed, close connection, stop pipeline");
+                ctx->exit_code = 1;
+                if (ctx->sock_fd >= 0) {
+                    tcp_client_close(ctx->sock_fd);
+                    ctx->sock_fd = -1;
+                }
+                ringbuffer_stop(&ctx->rb_uart);
+                ringbuffer_stop(&ctx->rb_json);
+                break;
             } else {
+
                 LOG_DEBUG("upload: sent %d bytes", n);
             }
             idx = 0;
@@ -219,5 +234,7 @@ cleanup:
     if (ctx.serial_fd >= 0) serial_close(ctx.serial_fd);
     if (ctx.sock_fd >= 0)   tcp_client_close(ctx.sock_fd);
     logger_close();
-    return rc;
+    /* 初始化失败返回 rc，运行时故障返回 ctx.exit_code */
+    return ctx.exit_code != 0 ? ctx.exit_code : rc;
+
 }

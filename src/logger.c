@@ -26,6 +26,7 @@ int logger_init(const char *filepath, log_level_t min_level)
         int fd = open(filepath, O_WRONLY | O_CREAT | O_APPEND, 0644);
         if (fd == -1) {
             perror("logger_init open");
+            g_log_fd = STDERR_FILENO;  /* fallback to stderr */
             return -1;
         }
         g_log_fd = fd;

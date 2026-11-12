@@ -1,0 +1,81 @@
+<mxfile host="app.diagrams.net" modified="2026-11-12T00:00:00.000Z" agent="claude" version="24.0.0">
+  <diagram name="数据流向图" id="dataflow">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="750" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 节点 1: 串口字节流 -->
+        <mxCell id="src" value="串口字节流" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="60" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 节点 2: 采集线程 -->
+        <mxCell id="collect" value="采集线程&#xa;serial_read" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="310" y="50" width="170" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 节点 3: 解析线程 -->
+        <mxCell id="parse" value="解析线程&#xa;frame_parser（五状态机）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="50" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 节点 4: 上传线程 -->
+        <mxCell id="upload" value="上传线程&#xa;tcp_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="310" y="410" width="170" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 节点 5: tcp_server -->
+        <mxCell id="dest" value="tcp_server" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="415" width="130" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 箭头: 串口 → collect -->
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#007744;strokeWidth=2;endArrow=classic;" edge="1" parent="1" source="src" target="collect">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 箭头: collect → parse (rb_uart) -->
+        <mxCell id="e2" value="                                  rb_uart.write（满阻塞）" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#0055AA;strokeColor=#0055AA;strokeWidth=2;endArrow=classic;" edge="1" parent="1" source="collect" target="parse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 箭头: parse → upload (rb_json) -->
+        <mxCell id="e3" value="                      rb_json.write（满阻塞）" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#0055AA;strokeColor=#0055AA;strokeWidth=2;endArrow=classic;" edge="1" parent="1" source="parse" target="upload">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="160" />
+              <mxPoint x="395" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 箭头: upload → tcp_server -->
+        <mxCell id="e4" value="send（EPIPE/FIN → 重连，3s 退避）" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#CC0000;strokeColor=#CC0000;strokeWidth=2;endArrow=classic;" edge="1" parent="1" source="upload" target="dest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 右侧注释区：rb_uart -->
+        <mxCell id="note1" value="rb_uart（字节环形缓冲）&#xa;解耦「串口速率 ≠ 解析速率」&#xa;字节级，无消息边界" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;verticalAlign=top;fontSize=11;spacingLeft=8;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="820" y="40" width="170" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- 右侧注释区：rb_json -->
+        <mxCell id="note2" value="rb_json（JSON 行环形缓冲）&#xa;解耦「解析速率 ≠ 网络速率」&#xa;上传线程按 \n 切行&#xa;提供消息边界" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;verticalAlign=top;fontSize=11;spacingLeft=8;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="820" y="130" width="170" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- 右侧注释区：并发机制 -->
+        <mxCell id="note3" value="并发机制&#xa;两条 rb 均：&#xa;  • 写满阻塞 / 读空阻塞&#xa;  • stop → 双 broadcast&#xa;    唤醒所有等待线程&#xa;  • while 防虚假唤醒&#xa;  • 排空语义（abort &amp;&amp; empty）" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;verticalAlign=top;fontSize=11;spacingLeft=8;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="820" y="230" width="170" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- 左下角：图例 -->
+        <mxCell id="legend" value="图例：▬ 绿线 = 串口　　蓝线 = 内存缓冲区　　红线 = TCP&#xa;　　🟡 椭圆 = 外部进程　　　🟢 方块 = pthread 线程" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;fontSize=11;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="80" y="550" width="420" height="45" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

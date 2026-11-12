@@ -1,0 +1,79 @@
+<mxfile host="app.diagrams.net" modified="2026-11-12T00:00:00.000Z" agent="claude" version="24.0.0">
+  <diagram name="系统架构图" id="arch">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="960" pageHeight="720" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- 外层：Linux 主机 -->
+        <mxCell id="linux" value="Linux 主机" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=14;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="880" height="660" as="geometry" />
+        </mxCell>
+
+        <!-- mock_stm32 框 -->
+        <mxCell id="mock" value="mock_stm32 (Python)&#xa;模拟下位机，发温湿度帧" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="70" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- tcp_server 框 -->
+        <mxCell id="server" value="tcp_server.py (Python)&#xa;按 \n 收 JSON 行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="620" y="70" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 串口连线 -->
+        <mxCell id="uart_edge" value="串口 115200 8N1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#007744;strokeColor=#007744;strokeWidth=2;" edge="1" parent="1" source="mock" target="gateway_box">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- TCP 连线 -->
+        <mxCell id="tcp_edge" value="TCP 长连接&#xa;JSON \n 分帧" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#CC0000;strokeColor=#CC0000;strokeWidth=2;" edge="1" parent="1" source="gateway_box" target="server">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- gateway 进程框 -->
+        <mxCell id="gateway_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="200" width="720" height="260" as="geometry" />
+        </mxCell>
+
+        <!-- gateway 标题 -->
+        <mxCell id="gateway_title" value="gateway (C 进程, 三线程)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fontSize=13;fontStyle=1;spacingLeft=10;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="130" y="205" width="300" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- 采集线程 -->
+        <mxCell id="collect" value="采集线程&#xa;serial_read" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="260" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 解析线程 -->
+        <mxCell id="parse" value="解析线程&#xa;frame_parser (五状态机)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="260" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- 上传线程 -->
+        <mxCell id="upload" value="上传线程&#xa;tcp_client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="640" y="260" width="160" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- rb_uart -->
+        <mxCell id="rb_uart_label" value="rb_uart（字节环形缓冲）" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#0055AA;strokeColor=#0055AA;strokeWidth=2;" edge="1" parent="1" source="collect" target="parse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- rb_json -->
+        <mxCell id="rb_json_label" value="rb_json（JSON 行环形缓冲）" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;fontColor=#0055AA;strokeColor=#0055AA;strokeWidth=2;" edge="1" parent="1" source="parse" target="upload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- 图例 -->
+        <mxCell id="legend_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="120" y="480" width="700" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="图例：　🟡 Python 脚本　　🟣 C 进程　　🟢 pthread 线程　　——箭头：蓝=内存缓冲区　红=TCP　绿=串口" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="130" y="490" width="680" height="35" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

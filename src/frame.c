@@ -14,6 +14,7 @@ static void frame_parser_reset(frame_parser_t *parser)
 void frame_parser_init(frame_parser_t *parser)
 {
     if (parser == NULL) {
+        LOG_ERROR("frame: parser_init NULL pointer");
         return;
     }
     parser->len = 0;

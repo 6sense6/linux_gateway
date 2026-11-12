@@ -17,7 +17,7 @@ static int is_empty(ringbuffer_t *rb)
 // 初始化缓冲区
 int ringbuffer_init(ringbuffer_t *rb, int size)
 {
-    if (!rb || size <= 0) return -1;
+    if (!rb || size < 2) return -1;
 
     rb->buf = malloc(size);
     if (!rb->buf) return -1;
@@ -68,7 +68,7 @@ void ringbuffer_stop(ringbuffer_t *rb)
     pthread_mutex_unlock(&rb->mutex);
 }
 
-/* 查询是否已 stop，供 caller 在非阻塞路径上检查退出条件 */
+// 查询是否已 stop，供 callers 在非阻塞路径上检查退出条件
 int ringbuffer_is_stopped(ringbuffer_t *rb)
 {
     int stopped;
@@ -78,7 +78,6 @@ int ringbuffer_is_stopped(ringbuffer_t *rb)
     pthread_mutex_unlock(&rb->mutex);
     return stopped;
 }
-
 
 // 写入一个字节，满则阻塞等待
 int ringbuffer_write(ringbuffer_t *rb, uint8_t data)

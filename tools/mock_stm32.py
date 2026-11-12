@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-# mock_stm32.py: 往 /tmp/ttySTM32 灌协议帧, 扮演STM32发送侧
-# 依赖: sudo apt install python3-serial
+# mock_stm32.py: 往串口灌协议帧, 扮演STM32发送侧
+# 依赖: pip3 install pyserial
 # 用法:
-#   python3 tools/mock_stm32.py          普通模式, 每秒1帧温湿度
-#   python3 tools/mock_stm32.py --noise  折磨模式, 每轮先攻击再发好帧
+#   python3 tools/mock_stm32.py [port]            普通模式, 每秒1帧温湿度
+#   python3 tools/mock_stm32.py [port] --noise    折磨模式, 每轮先攻击再发好帧
+#   port 默认 /tmp/ttySTM32
 
 import sys
 import time
 import struct
 import random
-
 import serial
 
-PORT = "/tmp/ttySTM32"
+PORT_DEFAULT = "/tmp/ttySTM32"
 BAUD = 115200
 
 
@@ -79,14 +79,19 @@ ATTACKS = [atk_half, atk_sticky, atk_badck, atk_badlen, atk_garbage, atk_fake_he
 
 def main():
     noise = "--noise" in sys.argv
+    port = PORT_DEFAULT
+    for a in sys.argv[1:]:
+        if not a.startswith("--"):
+            port = a
+            break
     try:
-        ser = serial.Serial(PORT, BAUD, timeout=1)
+        ser = serial.Serial(port, BAUD, timeout=1)
     except serial.SerialException as e:
-        print(f"打开{PORT}失败: {e}")
+        print(f"打开{port}失败: {e}")
         print("先确认socat虚拟串口对已经挂着")
         sys.exit(1)
 
-    print(f"mock open {PORT} @ {BAUD}, mode={'noise' if noise else 'normal'}")
+    print(f"mock open {port} @ {BAUD}, mode={'noise' if noise else 'normal'}")
     i = 0
     try:
         while True:

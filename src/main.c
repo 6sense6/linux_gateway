@@ -4,6 +4,7 @@
 #include "ringbuffer.h"
 #include "tcp_client.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdatomic.h>
@@ -221,14 +222,39 @@ done:
     return NULL;
 }
 
-/* ---------------- main ---------------- */
-int main(void)
+/* ---------------- usage ---------------- */
+static void usage(const char *prog)
 {
+    fprintf(stderr,
+        "usage: %s [serial_dev] [server_ip] [server_port]\n"
+        "  serial_dev   default %s\n"
+        "  server_ip    default %s\n"
+        "  server_port  default %d\n",
+        prog, SERIAL_DEV, SERVER_IP, SERVER_PORT);
+}
+
+/* ---------------- main ---------------- */
+int main(int argc, char *argv[])
+{
+    const char *serial_dev = SERIAL_DEV;
+    const char *server_ip  = SERVER_IP;
+    int         server_port = SERVER_PORT;
+
     gateway_ctx_t ctx;
     pthread_t tids[3];
     int n_threads = 0;
     int rb_uart_ok = 0, rb_json_ok = 0;
     int rc = 0;
+
+    if (argc > 1) { serial_dev  = argv[1]; }
+    if (argc > 2) { server_ip   = argv[2]; }
+    if (argc > 3) { server_port = atoi(argv[3]);
+                    if (server_port <= 0 || server_port > 65535) {
+                        fprintf(stderr, "invalid port: %s\n", argv[3]);
+                        usage(argv[0]);
+                        return 1;
+                    }}
+    if (argc > 4) { usage(argv[0]); return 1; }
 
     memset(&ctx, 0, sizeof(ctx));
     ctx.serial_fd = -1;
@@ -240,14 +266,14 @@ int main(void)
     if (logger_init(NULL, LOG_LVL_DEBUG) != 0)
         return 1;
 
-    ctx.serial_fd = serial_open(SERIAL_DEV);
+    ctx.serial_fd = serial_open(serial_dev);
     if (ctx.serial_fd < 0) {
-        LOG_ERROR("gateway: serial_open failed");
+        LOG_ERROR("gateway: serial_open(%s) failed", serial_dev);
         rc = 1;
         goto cleanup;
     }
 
-    ctx.sock_fd = tcp_client_connect(SERVER_IP, SERVER_PORT);
+    ctx.sock_fd = tcp_client_connect(server_ip, server_port);
     if (ctx.sock_fd < 0) {
         LOG_ERROR("gateway: initial connect failed");
         rc = 1;
